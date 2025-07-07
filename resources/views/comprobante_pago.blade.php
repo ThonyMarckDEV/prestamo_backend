@@ -138,7 +138,7 @@
             <img src="{{ $base64 }}" alt="Logotipo Fic Sullana" class="logo">
         </div>
         <div class="subtitle">CORPORACIÓN E INVERSIONES</div>
-        <div class="subtitle">SULLANA LA PERLA DEL CHIRA SAC</div>
+        <div class="subtitle">PRESTAMO DEMO</div>
         <div class="subtitle bold">COMPROBANTE DE PAGO</div>
     </div>
 
