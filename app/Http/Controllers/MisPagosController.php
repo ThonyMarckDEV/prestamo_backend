@@ -141,14 +141,15 @@ class MisPagosController extends Controller
             $directorio = "public/clientes/{$prestamo->idCliente}/prestamos/{$prestamo->idPrestamo}/cuotas/{$cuota->idCuota}/capturapago";
             $fullPath = storage_path('app/' . $directorio);
 
-            // Buscar el archivo de captura (jpg, jpeg, png)
+            // Buscar cualquier archivo en el directorio con extensiones jpg, jpeg o png
             $extensions = ['jpg', 'jpeg', 'png'];
             $capturaPath = null;
-            foreach ($extensions as $ext) {
-                $potentialPath = "{$fullPath}/capturapago.{$ext}";
-                if (File::exists($potentialPath)) {
-                    $capturaPath = "storage/clientes/{$prestamo->idCliente}/prestamos/{$prestamo->idPrestamo}/cuotas/{$cuota->idCuota}/capturapago/capturapago.{$ext}";
-                    break;
+            $files = File::files($fullPath); // Obtener todos los archivos en el directorio
+            foreach ($files as $file) {
+                if (in_array(strtolower($file->getExtension()), $extensions)) {
+                    $filename = $file->getFilename();
+                    $capturaPath = "storage/clientes/{$prestamo->idCliente}/prestamos/{$prestamo->idPrestamo}/cuotas/{$cuota->idCuota}/capturapago/{$filename}";
+                    break; // Tomar el primer archivo válido encontrado
                 }
             }
 
