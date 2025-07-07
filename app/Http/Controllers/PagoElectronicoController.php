@@ -468,10 +468,11 @@ class PagoElectronicoController extends Controller
                 throw new \Exception('El directorio de almacenamiento no tiene permisos de escritura: ' . dirname($fullPath));
             }
             
-            // Guardar la captura de pantalla
+            // Guardar la captura de pantalla con un nombre único usando timestamp
             $file = $request->file('capturapago');
             $extension = $file->getClientOriginalExtension();
-            $filename = 'capturapago.' . $extension;
+            $timestamp = now()->format('Ymd_His'); // Formato: AñoMesDía_HoraMinutoSegundo
+            $filename = "capturapago_{$timestamp}.{$extension}";
             $rutaComprobante = $directorio . '/' . $filename;
 
             // Guardar el archivo usando move para más control
