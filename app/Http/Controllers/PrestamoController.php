@@ -13,6 +13,7 @@ use App\Models\EstadoPrestamo;
 use App\Models\User;
 use App\Models\CuentaBancaria;
 use App\Models\Contacto;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -203,7 +204,12 @@ class PrestamoController extends Controller
         }
     }
 
-    public function storeGroup(Request $request)
+     /**
+     * Registrar préstamos grupales
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function storeGroup(Request $request): JsonResponse
     {
         try {
             DB::beginTransaction();
@@ -291,7 +297,7 @@ class PrestamoController extends Controller
 
                         $montoPendiente = $ultimaCuota->estado === 'pendiente' ? $ultimaCuota->monto : 0;
                         $prestamoExistente->update(['estado' => 'cancelado']);
-                        
+
                         // Actualizar el último registro en estados_prestamo para el préstamo existente
                         $ultimoEstado = EstadoPrestamo::where('idPrestamo', $prestamoExistente->idPrestamo)
                             ->orderBy('fecha_actualizacion', 'desc')
@@ -309,7 +315,7 @@ class PrestamoController extends Controller
                                 'idPrestamo' => $prestamoExistente->idPrestamo,
                                 'estado' => 'cancelado',
                                 'fecha_actualizacion' => now(),
-                                'idUsuario' => $validatedData['idCliente'],
+                                'idUsuario' => $prestamoData['idCliente'],
                                 'observacion' => 'Cancelado automáticamente al generar nuevo préstamo RCS'
                             ]);
                         }
@@ -363,7 +369,7 @@ class PrestamoController extends Controller
                     'idPrestamo' => $prestamo->idPrestamo,
                     'estado' => 'vigente',
                     'fecha_actualizacion' => now(),
-                    'idUsuario' =>  $validatedData['idCliente']
+                    'idUsuario' => $prestamoData['idCliente']
                 ]);
 
                 $rutaPDF = $this->generarPDFCronograma($prestamo);
