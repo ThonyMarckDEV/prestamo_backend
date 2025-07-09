@@ -74,7 +74,13 @@ Route::middleware(['auth.jwt', 'checkRoleMW:admin'])->group(function () {
     Route::post('/admin/prestamo', [PrestamoController::class, 'store']);
     Route::post('/admin/prestamos/grupo', [PrestamoController::class, 'storeGroup']);
     Route::get('/admin/prestamo/{id}', [PrestamoController::class, 'show']);
+
+    //Rutas grupos
     Route::post('/admin/grupos', [GrupoController::class, 'store']);
+    Route::get('admin/grupos', [GrupoController::class, 'index']);
+    Route::get('admin/grupos/{id}', [GrupoController::class, 'show']);
+    Route::put('admin/grupos/{id}', [GrupoController::class, 'update']);
+    Route::delete('admin/grupos/{id}', [GrupoController::class, 'destroy']);
 
     // Ruta para actualizar estados (normalmente se usaría con un cron job)
     Route::get('/admin/prestamo/actualizar-estados', [PrestamoController::class, 'actualizarEstadosCuotas']);
