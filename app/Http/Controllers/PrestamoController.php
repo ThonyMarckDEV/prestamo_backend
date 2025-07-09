@@ -290,14 +290,29 @@ class PrestamoController extends Controller
                         }
 
                         $montoPendiente = $ultimaCuota->estado === 'pendiente' ? $ultimaCuota->monto : 0;
-                        $prestamoExistente->update(['estado' => 'liquidado']);
-                        EstadoPrestamo::create([
-                            'idPrestamo' => $prestamoExistente->idPrestamo,
-                            'estado' => 'liquidado',
-                            'fecha_actualizacion' => now(),
-                            'idUsuario' =>  $validatedData['idCliente'],
-                            'observacion' => 'Liquidado automáticamente al generar nuevo préstamo RCS'
-                        ]);
+                        $prestamoExistente->update(['estado' => 'cancelado']);
+                        
+                        // Actualizar el último registro en estados_prestamo para el préstamo existente
+                        $ultimoEstado = EstadoPrestamo::where('idPrestamo', $prestamoExistente->idPrestamo)
+                            ->orderBy('fecha_actualizacion', 'desc')
+                            ->first();
+
+                        if ($ultimoEstado) {
+                            $ultimoEstado->update([
+                                'estado' => 'cancelado',
+                                'fecha_actualizacion' => now(),
+                                'observacion' => 'Cancelado automáticamente al generar nuevo préstamo RCS'
+                            ]);
+                        } else {
+                            // Si no existe un registro en estados_prestamo, crear uno
+                            EstadoPrestamo::create([
+                                'idPrestamo' => $prestamoExistente->idPrestamo,
+                                'estado' => 'cancelado',
+                                'fecha_actualizacion' => now(),
+                                'idUsuario' => $validatedData['idCliente'],
+                                'observacion' => 'Cancelado automáticamente al generar nuevo préstamo RCS'
+                            ]);
+                        }
 
                         if ($ultimaCuota->estado === 'pendiente') {
                             $ultimaCuota->update([
