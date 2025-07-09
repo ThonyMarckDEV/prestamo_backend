@@ -105,40 +105,49 @@ class CronogramaController extends Controller
         }
     }
 
-    // Search loans by group name
-    public function searchByGroup(Request $request)
+   public function searchByGroup(Request $request)
     {
         try {
-            $nombreGrupo = $request->input('nombreGrupo');
-            $grupo = Grupo::where('nombre', $nombreGrupo)->first();
-            if (!$grupo) {
-                return response()->json(['message' => 'No se encontró el grupo especificado'], 404);
-            }
+            $validatedData = $request->validate([
+                'idGrupo' => 'required|exists:grupos,idGrupo',
+            ]);
 
-            $prestamos = Prestamo::where('idGrupo', $grupo->idGrupo)
+            $prestamos = Prestamo::with(['cliente.datos'])
+                ->where('idGrupo', $validatedData['idGrupo'])
                 ->where('estado', 'activo')
-                ->with('cliente.datos')
-                ->get();
-
-            return response()->json([
-                'grupo' => $grupo->nombre,
-                'prestamos' => $prestamos->map(function ($prestamo) {
+                ->get()
+                ->map(function ($prestamo) {
                     return [
                         'idPrestamo' => $prestamo->idPrestamo,
                         'monto' => $prestamo->monto,
                         'frecuencia' => $prestamo->frecuencia,
                         'cuotas' => $prestamo->cuotas,
                         'fecha_inicio' => $prestamo->fecha_inicio,
-                        'cliente' => $prestamo->cliente->datos
-                            ? $prestamo->cliente->datos->nombre . ' ' . $prestamo->cliente->datos->apellidoPaterno . ' ' . $prestamo->cliente->datos->apellidoMaterno
-                             . ' ' . ($prestamo->cliente->datos->apellidoConyuge ?? '') : 'Sin cliente',
-                        'dni' => $prestamo->cliente->datos ? $prestamo->cliente->datos->dni : null,
+                        'cliente' => $prestamo->cliente->datos ? 
+                            "{$prestamo->cliente->datos->nombre} {$prestamo->cliente->datos->apellidoPaterno} {$prestamo->cliente->datos->apellidoMaterno}" : 
+                            'Sin cliente',
+                        'dni' => $prestamo->cliente->datos->dni ?? 'Sin DNI',
                     ];
-                })->toArray(),
+                });
+
+            if ($prestamos->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No se encontraron clientes con los criterios proporcionados',
+                    'prestamos' => []
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'prestamos' => $prestamos
             ]);
         } catch (\Exception $e) {
-            Log::error("Error al buscar préstamos por grupo: " . $e->getMessage());
-            return response()->json(['message' => 'Error al buscar préstamos'], 500);
+            Log::error('Error en CronogramaController@searchByGroup: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
